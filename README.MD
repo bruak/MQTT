@@ -1,7 +1,3 @@
-# MQTT Hava Durumu Sistemi Analizi
-
-Kodunuzu analiz ettim ve kapsamlı bir README hazırlayacağım. Mevcut projeniz, MQTT protokolü üzerinden çalışan bir hava durumu bilgi sistemi oluşturmuş. Şimdi bunu bir README dökümanı haline getirelim.Özür dilerim, README dosyasını oluşturmak için kullandığım araç çalışmadı, ancak ben size kapsamlı README içeriğini verebilirim. Projenizin analizi sonucunda aşağıdaki README içeriğini hazırladım:
-
 # MQTT Hava Durumu Sistemi
 
 Bu proje, MQTT protokolü kullanarak hava durumu verilerini OpenWeatherMap API'sinden çekip, Telegram kanalına ileten bir sistemdir. Docker tabanlı mikroservis mimarisi kullanılarak oluşturulmuştur.
@@ -118,4 +114,120 @@ Bu sistemde MQTT bağlantı yönetimi için farklı yöntemler kullanılmıştı
 - Hata yakalama mekanizmalarını iyileştirin
 - Loglama seviyesini artırın
 
-Bu README dosyasını proje kök dizininize ekleyerek, projenizin nasıl çalıştığını, nasıl kurulacağını ve nasıl kullanılacağını dokümante edebilirsiniz. Bu, hem projeyi daha anlaşılır kılacak hem de potansiyel kullanıcılar ve katkıda bulunacak kişiler için rehber görevi görecektir.
+---
+
+# MQTT Weather System
+
+This project is a system that fetches weather data from the OpenWeatherMap API using the MQTT protocol and forwards it to a Telegram channel. It is built using a Docker-based microservice architecture.
+
+## System Architecture
+
+The project consists of three main components:
+
+1. **MQTT Broker (Eclipse Mosquitto)**: Acts as an intermediary for the MQTT messaging protocol.
+2. **Weather Publisher**: Fetches weather data from the OpenWeatherMap API and publishes it through the MQTT broker.
+3. **Weather Subscriber**: Receives messages from the MQTT broker, processes them, and sends them to a Telegram channel.
+
+```
+                   +----------------+
+                   |                |
+                   | OpenWeatherMap |
+                   |     API        |
+                   |                |
+                   +-------+--------+
+                           |
+                           | HTTP GET
+                           |
+                   +-------v--------+                  +-----------------+                  +---------------+
+                   |                |  MQTT Publish    |                 |  MQTT Subscribe  |               |
+                   | Weather        +----------------->+ MQTT Broker     +----------------->+ Weather       |
+                   | Publisher      |                  | (Mosquitto)     |                  | Subscriber    |
+                   |                |                  |                 |                  |               |
+                   +----------------+                  +-----------------+                  +-------+-------+
+                                                                                                   |
+                                                                                                   | HTTP POST
+                                                                                                   |
+                                                                                          +--------v--------+
+                                                                                          |                |
+                                                                                          | Telegram Bot   |
+                                                                                          | API            |
+                                                                                          |                |
+                                                                                          +-----------------+
+```
+
+## Technologies Used
+
+- **Docker & Docker Compose**: Containerization and service orchestration
+- **Python 3.10**: Main programming language
+- **MQTT (Eclipse Mosquitto)**: Messaging protocol
+- **Paho MQTT Client**: Python MQTT client library
+- **Requests**: Python library for HTTP requests
+- **OpenWeatherMap API**: Weather data source
+- **Telegram Bot API**: For delivering weather data to users
+
+## Installation
+
+### Requirements
+
+- Docker and Docker Compose
+- Git
+
+### Steps
+
+1. Clone the project:
+   ```bash
+   git clone https://github.com/bsoykan/MQTT.git
+   cd MQTT/MQTT3
+   ```
+
+2. Update your Telegram bot token and channel ID:
+   ```bash
+   # Update the following variables in subscriber.py
+   BOT_TOKEN = 'YOUR_TELEGRAM_BOT_TOKEN'
+   CHAT_ID = '@YOUR_TELEGRAM_CHANNEL'
+   ```
+
+3. Update your OpenWeatherMap API key:
+   ```bash
+   # Update the following variable in publisher.py
+   api_key = "YOUR_OPENWEATHERMAP_API_KEY"
+   ```
+
+4. Start the application:
+   ```bash
+   make up
+   # or
+   docker compose up -d --build
+   ```
+
+## Usage
+
+After the system is started:
+
+1. **Weather Publisher** fetches weather data from the OpenWeatherMap API every 10 minutes (600 seconds).
+2. This data is published to the "test/topic" topic via the MQTT broker.
+3. **Weather Subscriber** subscribes to this topic and processes the incoming messages.
+4. The processed data is sent to a Telegram channel.
+
+## MQTT Connection Architecture
+
+Different methods are used for MQTT connection management in this system:
+
+- Publisher: Connection is maintained with a thread running in the background using the `loop_start()` method.
+- Subscriber: Connection is maintained in the main thread using the `loop_forever()` method.
+
+## Troubleshooting
+
+### Common Errors
+
+1. **Connection Timeout**: If the connection to the MQTT broker is lost, you may see a "Client X has exceeded timeout" error. In this case, check the MQTT loop management.
+
+2. **API Errors**: If the OpenWeatherMap API returns an error, weather data cannot be retrieved. Check your API key and request limits.
+
+3. **JSON Parse Errors**: Parsing errors may occur in case of data format incompatibility.
+
+### Solutions
+
+- Use `loop_start()` or `loop_forever()` to keep the MQTT connection active
+- Improve error handling mechanisms
+- Increase logging level

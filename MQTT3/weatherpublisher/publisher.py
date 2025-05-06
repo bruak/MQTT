@@ -19,7 +19,6 @@ client.on_connect = on_connect
 client.connect("mqtt-broker", 1883, 60)
 
 client.loop_start()
-# client.loop_forever() bu olursa ne fark olur acaba 
 
 while True:
     try:
@@ -38,3 +37,4 @@ while True:
     except Exception as e:
         print(f"Error occurred: {e}")
         time.sleep(60)
+        

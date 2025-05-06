@@ -71,7 +71,6 @@ def send_telegram_msg(parsed_data):
     response = requests.post(url, data=payload)
     print(response.json())
 
-#client = mqtt.Client()
 client = mqtt.Client(client_id=CLIENT_ID, 
                      callback_api_version=mqtt.CallbackAPIVersion.VERSION2)
 
